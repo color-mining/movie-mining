@@ -1,0 +1,16 @@
+SELECT * FROM movies AS a WHERE EXISTS (SELECT b.imdb FROM movies AS b WHERE b.imdb = a.imdb)
+
+SELECT
+    imdb, title, COUNT(*)
+FROM
+    movies
+GROUP BY
+    imdb, title
+HAVING 
+    COUNT(*) > 1
+
+SELECT * FROM movies
+WHERE rowid NOT IN (
+  SELECT MIN(rowid) 
+  FROM movies 
+  GROUP BY imdb)
