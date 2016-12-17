@@ -29,7 +29,7 @@ vo(run)(function(err, result) {
 function * run() {
 
 	var db = new sqlite3.Database('data/movies.sqlite');
-	var tableName = "movies";
+	var tableName = "movies_movieposterdb";
 
     var orginalTitles = ["Fargo"];
     var germanTitles = ["Fargo"];
@@ -204,25 +204,7 @@ function * run() {
 		}
 
 	});
-	
-
-	
-	//console.log(obj);
 
 	//db.close();
 
-
-	/*
-    console.dir(data);
-    data = JSON.stringify(data, null, 2)
-
-    //write results to timestamped json file
-    results = './results'
-
-    if(!fs.existsSync(results)){
-        fs.mkdirSync(results);
-    }
-    fs.writeFile('results/output.json', data, 'utf8');
-    yield nightmare.end();
-    */
 }
