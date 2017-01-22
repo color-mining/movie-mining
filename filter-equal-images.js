@@ -6,8 +6,8 @@ const sqlite3 = require('sqlite3').verbose();
 
 var db = new sqlite3.Database('data/movies.sqlite');
 var dbResults = new sqlite3.Database('data/results.sqlite');
-const inputDir = "results/imdb/filtered/poster/";
-const outputDir = "results/imdb/filtered/poster_unique/";
+const inputDir = "results/imdb/test/src/";
+const outputDir = "results/imdb/test/result/";
 var files = [];
 var movies = [];
 
@@ -128,13 +128,21 @@ function compareImages(images, imdb)
 		}
 	}
 
-	for (var i = 0; i < images.length; i++)
+	if (images.length > 1)
 	{
-		for (var k = i + 1; k < images.length; k++)
+		for (var i = 0; i < images.length; i++)
 		{
-			counter++;
-			getImages(images[i], images[k], compare);
+			for (var k = i + 1; k < images.length; k++)
+			{
+				counter++;
+				getImages(images[i], images[k], compare);
+			}
 		}
+	}
+	else if (images.length > 0)
+	{
+		counter++;
+		getImages(images[0], images[0], compare);
 	}
 }
 

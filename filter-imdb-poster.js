@@ -9,14 +9,14 @@ vo(run)(function(err, result) {
 
 function * run() {
 
-	const inputDir = "results/imdb/media_new/";
-	const outputDir = "results/imdb/poster/";
+	const inputDir = "results/imdb/src/media_new/";
+	const outputDir = "results/imdb/filtered/poster/";
 	var files = [];
 	var index = 0;
 
 	function isPoster(image)
 	{
-		return (image.bitmap.width <= image.bitmap.height);
+		return (image.bitmap.width < image.bitmap.height);
 	}
 
 	function getImage()

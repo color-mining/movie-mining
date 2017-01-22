@@ -4,8 +4,132 @@
 		"selected_items":
 		[
 			[
+				"u",
+				"unique"
+			],
+			[
+				"file",
+				"filename"
+			],
+			[
+				"has",
+				"hasOwnProperty"
+			],
+			[
+				"diff",
+				"difference"
+			],
+			[
+				"comp",
+				"compareImages"
+			],
+			[
+				"insert",
+				"insertRow"
+			],
+			[
+				"Math",
+				"Math.floor( x: number ): number\tMath"
+			],
+			[
+				"tot",
+				"totalTime"
+			],
+			[
+				"movie",
+				"movies"
+			],
+			[
+				"sta",
+				"startTime"
+			],
+			[
+				"movies",
+				"movies_imdb"
+			],
+			[
+				"moive",
+				"movies"
+			],
+			[
+				"save",
+				"saveImage"
+			],
+			[
+				"getIma",
+				"getImages"
+			],
+			[
+				"dis",
+				"distance"
+			],
+			[
+				"le",
+				"length"
+			],
+			[
+				"inde",
+				"indexMovie"
+			],
+			[
+				"image",
+				"imageOrientation = ''\tStyle CSS"
+			],
+			[
+				"for",
+				"forEach"
+			],
+			[
+				"imdb_photo",
+				"imdb_photo_errors"
+			],
+			[
+				"meid",
+				"mediaLinks"
+			],
+			[
 				"res",
-				"response\tXMLHttpRequest"
+				"result"
+			],
+			[
+				"table",
+				"tableName"
+			],
+			[
+				"parse",
+				"parseMediaPage"
+			],
+			[
+				"getMo",
+				"getMoviesFromDb"
+			],
+			[
+				"media",
+				"mediaLinks"
+			],
+			[
+				"medi",
+				"mediaLinks"
+			],
+			[
+				"med",
+				"mediaLinks"
+			],
+			[
+				"each",
+				"forEach"
+			],
+			[
+				"console",
+				"console.log()"
+			],
+			[
+				"cl",
+				"close(): void\tEventSource"
+			],
+			[
+				"fun",
+				"function"
 			],
 			[
 				"re",
@@ -29,30 +153,68 @@
 			}
 		},
 		{
-			"file": "scrape-posterdb.js",
+			"file": "download-artwork-imdb.js",
 			"settings":
 			{
-				"buffer_size": 10433,
+				"buffer_size": 2075,
 				"encoding": "UTF-8",
 				"line_ending": "Windows"
 			}
 		},
 		{
-			"file": "data/movies.json",
+			"file": "download-artwork-imdb-poster.js",
 			"settings":
 			{
-				"buffer_size": 1218755,
+				"buffer_size": 2110,
 				"encoding": "UTF-8",
 				"line_ending": "Windows"
 			}
 		},
 		{
-			"file": "views/layout.jade",
+			"contents": "var vo = require('vo');\nvar fs = require('fs');\nvar sqlite3 = require('sqlite3').verbose();\nvar Nightmare = require('nightmare');\n\nvo(run)(function(err, result) {\n    if (err) throw err;\n});\n\nfunction * run() {\n\n\tvar dbResults = new sqlite3.Database('data/results.sqlite');\n\tvar mediaLinksTable = \"imdb_media_results\";\n\tvar allRows = [];\n\tvar index = 0;\n\n\tfunction parseMediaPage(rows)\n\t{\n\t\tvar nightmare = Nightmare();\n\t\tvar row = (rows != undefined && rows.length > 0) ? rows[0] : allRows[index++];\n\n\t\tconsole.log(row.id + \": \" + row.url);\n\t\tnightmare.goto(row.url)\n\t\t.wait('#photo-container')\n\t\t.wait(2000)\n\t\t.evaluate(function(row) {\n\t\t\tvar image = {};\n\t\t\t$('.pswp__item img:visible').each(function(idx, item){\n\n\t\t\t\tif (/display/.test($(this).attr(\"style\")))\n\t\t\t\t{\n\t\t\t\t\timage.id = row.id;\n\t\t\t\t\timage.url = $(this).attr(\"src\");\n\t\t\t\t\timage.idx = row.idx;\n\t\t\t\t\timage.imdb = row.imdb;\n\t\t\t\t}\n\t\t\t});\n\n\t\t\treturn image;\n\t\t}, row)\n\t\t.end()\n\t\t.then(function(image){\n\n\t\t\tinsertRow(image);\n\t\t\tif (index < allRows.length) parseMediaPage();\n\t\t\t//else dbResults.close();\n\t\t})\n\t\t.catch(function(error) {\n\t\t\tconsole.error('error', error);\n\t\t\tinsertError(row, error);\n\t\t\tif (allRows.length > 0) parseMediaPage();\n\t\t});\n\t}\n\n\tfunction getMoviesFromDb()\n\t{\n\t\tdbResults.serialize(function() {\n\t\t\tdbResults.all(\"SELECT id, imdb, idx, url FROM \" + mediaLinksTable + \" WHERE id > 328\" , function(err, rows) {\n\t\t\t\tallRows = rows;\n\t\t\t\tif (allRows.length > 0) parseMediaPage();\n\t\t\t});\n\t\t});\n\t}\n\n\t\n\n\tfunction getErrorsFromDb()\n\t{\n\t\tvar errorTable = \"imdb_photo_errors\";\n\t\tdbResults.serialize(function() {\n\t\t\tdbResults.each(\"SELECT id, imdb, p_id FROM \" + errorTable, function(err, row) {\n\n\t\t\t\tdbResults.serialize(function() {\n\t\t\t\t\tconsole.log(row);\n\t\t\t\t\tdbResults.all(\"SELECT id, imdb, idx, url FROM \" + mediaLinksTable + \" WHERE id = \" + row.p_id , function(err, rows) {\n\t\t\t\t\t\tconsole.log(rows.length + \" : \" + allRows.length);\n\t\t\t\t\t\t//allRows.concat(rows);\n\t\t\t\t\t\tif (rows.length > 0) parseMediaPage(rows);\n\t\t\t\t\t});\n\t\t\t\t});\n\n\t\t\t});\n\t\t});\n\t}\n\n\tfunction insertRow(row)\n\t{\n\t\tvar tableName = \"imdb_photo_results\";\n\n\t\tdbResults.serialize(function() {\n\n\t\t  var stmt = dbResults.prepare(\"REPLACE INTO \"+tableName+\" (id, imdb, idx, url) VALUES ($id, $imdb, $index, $url)\", {\n\t\t  \t$id : row.id;\n\t\t  \t$imdb : row.imdb,\n\t\t  \t$index : row.idx,\n\t\t  \t$url : row.url\n\t\t  });\n\n\t\t  stmt.run();\n\t\t  stmt.finalize();\n\n\t\t});\t\t\n\t}\n\n\tfunction insertError(row, error)\n\t{\n\t\tvar tableName = \"imdb_photo_errors\";\n\n\t\tdbResults.serialize(function() {\n\n\t\t  var stmt = dbResults.prepare(\"INSERT INTO \"+tableName+\" (imdb, p_id, error) VALUES ($imdb, $p_id, $error)\", {\n\t\t  \t$imdb : row.imdb,\n\t\t  \t$p_id : row.id,\n\t\t  \t$error : error\n\t\t  });\n\n\t\t  stmt.run();\n\t\t  stmt.finalize();\n\n\t\t});\t\t\n\t}\n\n\t//getMoviesFromDb();\n\t//getErrorsFromDb();\n}",
+			"file": "scrape-imdb-media-links.js",
+			"file_size": 2899,
+			"file_write_time": 131264405781504857,
 			"settings":
 			{
-				"buffer_size": 175,
+				"buffer_size": 2782,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "filter-imdb-poster.js",
+			"settings":
+			{
+				"buffer_size": 1111,
 				"encoding": "UTF-8",
-				"line_ending": "Unix"
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "filter-equal-images.js",
+			"settings":
+			{
+				"buffer_size": 3913,
+				"encoding": "UTF-8",
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "data/sql.txt",
+			"settings":
+			{
+				"buffer_size": 378,
+				"encoding": "UTF-8",
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "generate-colors-imdb.js",
+			"settings":
+			{
+				"buffer_size": 1593,
+				"encoding": "UTF-8",
+				"line_ending": "Windows"
 			}
 		}
 	],
@@ -76,7 +238,7 @@
 	},
 	"console":
 	{
-		"height": 0.0,
+		"height": 126.0,
 		"history":
 		[
 		]
@@ -100,6 +262,16 @@
 	],
 	"file_history":
 	[
+		"/D/Nodejs-Projekte/movie-mining/download-artwork-omdbapi.js",
+		"/D/Nodejs-Projekte/movie-mining/download-artwork-movieposterdb.js",
+		"/D/Nodejs-Projekte/movie-mining/scrape-imdb.js",
+		"/D/Nodejs-Projekte/movie-mining/scrape-posterdb.js",
+		"/D/Nodejs-Projekte/movie-mining/update-imdb-omdbapi.js",
+		"/D/Nodejs-Projekte/movie-mining/download-artwork-imdb.js",
+		"/D/Nodejs-Projekte/movie-mining/data/generate-colors-imdb.js",
+		"/D/Nodejs-Projekte/movie-mining/scrape-artwork-download.js",
+		"/D/Nodejs-Projekte/movie-mining/views/layout.jade",
+		"/D/Nodejs-Projekte/movie-mining/data/movies.json",
 		"/D/Nodejs-Projekte/movie-mining/data/movie.json",
 		"/D/Nodejs-Projekte/movie-mining/views/index.jade",
 		"/D/Nodejs-Projekte/movie-mining/parse-imdb-list.js",
@@ -113,11 +285,11 @@
 	],
 	"find":
 	{
-		"height": 34.0
+		"height": 23.0
 	},
 	"find_in_files":
 	{
-		"height": 0.0,
+		"height": 90.0,
 		"where_history":
 		[
 		]
@@ -145,7 +317,7 @@
 	"groups":
 	[
 		{
-			"selected": 1,
+			"selected": 5,
 			"sheets":
 			[
 				{
@@ -173,61 +345,62 @@
 						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 2,
+					"stack_index": 7,
 					"type": "text"
 				},
 				{
 					"buffer": 1,
-					"file": "scrape-posterdb.js",
+					"file": "download-artwork-imdb.js",
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 10433,
+						"buffer_size": 2075,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								7865,
-								7865
+								0,
+								2075
 							]
 						],
 						"settings":
 						{
-							"syntax": "Packages/JavaScript/JavaScript.sublime-syntax"
-						},
-						"translation.x": 0.0,
-						"translation.y": 2100.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 0,
-					"type": "text"
-				},
-				{
-					"buffer": 2,
-					"file": "data/movies.json",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 1218755,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								102,
-								102
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/JavaScript/JSON.sublime-syntax",
+							"syntax": "Packages/JavaScript/JavaScript.sublime-syntax",
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
 						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 4,
+					"type": "text"
+				},
+				{
+					"buffer": 2,
+					"file": "download-artwork-imdb-poster.js",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 2110,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1879,
+								1538
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/JavaScript/JavaScript.sublime-syntax",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 525.0,
 						"zoom_level": 1.0
 					},
 					"stack_index": 1,
@@ -235,24 +408,140 @@
 				},
 				{
 					"buffer": 3,
-					"file": "views/layout.jade",
+					"file": "scrape-imdb-media-links.js",
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 175,
+						"buffer_size": 2782,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								127,
-								127
+								0,
+								2782
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/JavaScript/JavaScript.sublime-syntax",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 105.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 5,
+					"type": "text"
+				},
+				{
+					"buffer": 4,
+					"file": "filter-imdb-poster.js",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 1111,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								284,
+								284
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/JavaScript/JavaScript.sublime-syntax",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 2,
+					"type": "text"
+				},
+				{
+					"buffer": 5,
+					"file": "filter-equal-images.js",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 3913,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								821,
+								821
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/JavaScript/JavaScript.sublime-syntax",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 0,
+					"type": "text"
+				},
+				{
+					"buffer": 6,
+					"file": "data/sql.txt",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 378,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								291,
+								291
 							]
 						],
 						"settings":
 						{
 							"syntax": "Packages/Text/Plain text.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 6,
+					"type": "text"
+				},
+				{
+					"buffer": 7,
+					"file": "generate-colors-imdb.js",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 1593,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								637,
+								637
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/JavaScript/JavaScript.sublime-syntax",
+							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
 						"translation.y": 0.0,
@@ -305,7 +594,7 @@
 	},
 	"output.nodejs":
 	{
-		"height": 245.0
+		"height": 235.0
 	},
 	"pinned_build_system": "Packages/Nodejs/Nodejs.sublime-build",
 	"project": "movie-mining.sublime-project",
@@ -349,7 +638,7 @@
 	"show_open_files": true,
 	"show_tabs": true,
 	"side_bar_visible": true,
-	"side_bar_width": 150.0,
+	"side_bar_width": 246.0,
 	"status_bar_visible": true,
 	"template_settings":
 	{
