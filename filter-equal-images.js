@@ -6,8 +6,8 @@ const sqlite3 = require('sqlite3').verbose();
 
 var db = new sqlite3.Database('data/movies.sqlite');
 var dbResults = new sqlite3.Database('data/results.sqlite');
-const inputDir = "results/imdb/test/src/";
-const outputDir = "results/imdb/test/result/";
+const inputDir = "results/imdb/filtered/poster/";
+const outputDir = "results/imdb/filtered/poster_unique/";
 var files = [];
 var movies = [];
 
