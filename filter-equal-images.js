@@ -69,7 +69,7 @@ function compareImages(images, imdb)
 	var counter = 0;
 	var compared = {};
 
-	console.log("Testing:\t" + images.length + " Image(s)\t(Movies left: \t" + movies.length + ")");
+	console.log("Testing:\t" + images.length + " Image(s)\t(Movies left: \t" + Object.keys(movies).length + ")");
 
 	function compare(a, b)
 	{
